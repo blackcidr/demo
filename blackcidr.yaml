@@ -25,5 +25,5 @@ actions:
         options:
           - server=vbdev:dev-server
           - asset=directory://<working-dir>/website
-          - run-options: -p 80:80
+          - run-options=-p 80:80
           - skip-if-exists
