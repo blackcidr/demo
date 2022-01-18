@@ -1,0 +1,29 @@
+---
+
+actions:
+
+  - action: dev
+
+    tasks:
+
+      - scope: blueprint
+        command: run
+        name: docker-server:build
+        options:
+          - cloud=awsdev
+          - variables="prefix=dev"
+          - skip-if-exists
+
+      - scope: container
+        command: purge
+        options:
+          - server=vbdev:dev-server
+
+      - scope: container
+        command: create
+        name: demo-site
+        options:
+          - server=vbdev:dev-server
+          - asset=directory://<working-dir>/website
+          - run-options: -p 80:80
+          - skip-if-exists
