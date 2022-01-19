@@ -5,7 +5,7 @@ actions:
   - action: dev
 
     variables:
-      -variable: cloud
+      - variable: cloud
 
     tasks:
 
