@@ -4,26 +4,29 @@ actions:
 
   - action: dev
 
+    variables:
+      -variable: cloud
+
     tasks:
 
       - scope: blueprint
         command: run
-        name: docker-server:build
+        name: single-docker-server:build
         options:
-          - cloud=awsdev
+          - cloud=<cloud>
           - variables="prefix=dev"
           - skip-if-exists
 
       - scope: container
         command: purge
         options:
-          - server=vbdev:dev-server
+          - server=<cloud>:dev-server
 
       - scope: container
         command: create
         name: demo-site
         options:
-          - server=vbdev:dev-server
+          - server=<cloud>:dev-server
           - asset=directory://<working-dir>/website
           - run-options=-p 80:80
           - skip-if-exists
