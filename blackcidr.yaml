@@ -1,8 +1,14 @@
 ---
 
+name: Demo Blueprint
+
 actions:
 
-  - action: dev
+  - action: spin-up-dev
+    description: Spin up a development server that the website
+
+    globals:
+      - skip-if-exists
 
     variables:
       - variable: cloud
@@ -15,7 +21,6 @@ actions:
         options:
           - cloud=<cloud>
           - variables="prefix=dev"
-          - skip-if-exists
 
       - scope: container
         command: purge
@@ -29,4 +34,109 @@ actions:
           - server=<cloud>:dev-server
           - asset=directory://<working-dir>/website
           - run-options=-p 80:80
-          - skip-if-exists
+
+      - scope: zone
+        command: point-to-server
+        name: blackcidr.com
+        options:
+          - subdomain=dev 
+          - server=dev-server
+          - sole-record
+
+
+  - action: tear-down-dev
+    description: Tear down the development server created with blueprint "spin-up-dev"
+
+    globals:
+      - skip-if-exists
+
+    variables:
+      - variable: cloud
+
+    tasks:
+
+      - scope: blueprint
+        command: run
+        name: single-docker-server:destroy
+        options:
+          - cloud=<cloud>
+          - variables="prefix=dev"
+
+
+  - action: spin-up-qa-0..n
+    description: spin up multiple QA servers that host the website
+
+    globals:
+      - skip-if-exists
+
+    variables:
+
+      - variable: cloud
+
+      - variable: subdomain
+        value: qa
+
+      - variable: count
+
+    tasks:
+
+      - scope: blueprint
+        command: run
+        name: basic-network:build
+        options:
+          - cloud=<cloud>
+
+      - scope: firewall
+        command: add-rule
+        name: basic-firewall
+        options:
+          - cloud=<cloud>
+          - protocol=tcp
+          - port-range=80
+
+      - scope: reserved-ip
+        command: create
+        name: <subdomain><cnt>-ip
+        options:
+          - cloud=<cloud>
+          - count=<count>
+
+      - scope: server
+        command: create
+        name: <subdomain><cnt>-server
+        options:
+          - cloud=<cloud>
+          - subnet=basic-subnet
+          - keypair=basic-keypair
+          - reserved-ip=<subdomain><cnt>-ip
+          - count=<count>
+
+      - scope: firewall
+        command: attach
+        name: basic-firewall
+        options:
+          - server=<subdomain><cnt>-server
+          - cloud=<cloud>
+          - count=<count>
+
+      - scope: container
+        command: prepare
+        options:
+          - server=<subdomain><cnt>-server
+
+      - scope: container
+        command: create
+        name: demo-site
+        options:
+          - server=<subdomain><cnt>-server
+          - asset=directory://<working-dir>/website
+          - port=80:80
+
+      - scope: zone
+        command: point-to-server
+        name: blackcidr.com
+        options:
+          - subdomain=<subdomain><cnt>
+          - server=<cloud>:<subdomain><cnt>-server
+          - sole-record
+          - count=<count>
