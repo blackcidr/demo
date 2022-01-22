@@ -1,8 +1,41 @@
 ---
 
-name: Demo Blueprint
+name: demo-blueprint
 
 actions:
+
+  - action: deploy
+
+    tasks:
+
+      - scope: blueprint
+        command: run
+        name: single-docker-server:build
+        options:
+          - cloud=vultrdev
+          - variables="prefix=dev"
+
+      - scope: container
+        command: purge
+        options:
+          - server=vultrdev:dev-server
+
+      - scope: container
+        command: create
+        name: demo-site
+        options:
+          - server=vultrdev:dev-server
+          - asset=directory://<working-dir>/website
+          - run-options=-p 80:80
+
+      - scope: zone
+        command: point-to-server
+        name: blackcidr.com
+        options:
+          - subdomain=dev 
+          - server=vultrdev:dev-server
+          - sole-record
+
 
   - action: spin-up-dev
     description: Spin up a development server that the website
