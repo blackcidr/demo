@@ -2,6 +2,7 @@
 
 name: demo-blueprint
 
+
 actions:
 
   - action: deploy
